@@ -8,20 +8,22 @@ import {
 } from "react-native-vision-camera";
 import { sampleFrame } from "./sampleFrame";
 import { runOnJS } from "react-native-reanimated";
+import FastImage from "react-native-fast-image";
 
 const App = () => {
   const devices = useCameraDevices();
   const device = devices.back;
 
   const [image, setImage] = useState("");
+  const [format, setFormat] = useState("");
 
   const frameProcessor = useFrameProcessor((frame) => {
     "worklet";
 
     const result = sampleFrame(frame);
-    const encoded = result.data;
 
-    runOnJS(setImage)(encoded);
+    runOnJS(setImage)(result.encoded);
+    runOnJS(setFormat)(result.format);
   }, []);
 
   // render
@@ -41,13 +43,14 @@ const App = () => {
           frameProcessor={frameProcessor}
           frameProcessorFps={0.5}
         />
-        <Image
+        <FastImage
           style={styles.camera}
           source={{ uri: `data:image/jpeg;base64,${image}` }}
         />
-        <Text>{image.length}</Text>
-        <Text>{image.slice(0, 30)}</Text>
-        <Text>{image.slice(image.length - 30, image.length)}</Text>
+        <Text>Image length: {image.length}</Text>
+        <Text>Image format: {format}</Text>
+        <Text>Image[:30]: {image.slice(0, 30)}</Text>
+        <Text>Image[-30:]: {image.slice(image.length - 30, image.length)}</Text>
       </View>
     );
   }

@@ -55,7 +55,11 @@ public class SampleFrameProcessorPlugin extends FrameProcessorPlugin {
 
         assert imageImage != null;
         String encoded = toBase(imageImage);
-        map.putString("data", encoded);
+
+        int format = image.getFormat();
+
+        map.putString("encoded", encoded);
+        map.putInt("format", format);
 
         return map;
     }
