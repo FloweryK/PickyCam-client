@@ -62,9 +62,8 @@ const styles = StyleSheet.create({
     height: 200,
   },
   image: {
-    width: 200,
-    height: 150,
-    transform: [{ rotate: "90deg" }],
+    width: 150,
+    height: 200,
   },
 });
 
