@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.camera.core.ImageProxy;
 
-import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
 import com.mrousavy.camera.frameprocessor.FrameProcessorPlugin;
 
@@ -19,45 +18,80 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 public class SampleFrameProcessorPlugin extends FrameProcessorPlugin {
-    private String toBase(Image image) {
-        Image.Plane[] planes = image.getPlanes();
+    private String ImageToBase64(Image image) {
+        // Image -> YuvImage
+        if (image.getFormat() != ImageFormat.YUV_420_888) {
+            throw new IllegalArgumentException("Invalid image format");
+        }
 
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
+        int width = image.getWidth();
+        int height = image.getHeight();
 
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
+        // Order of U/V channel guaranteed, read more:
+        // https://developer.android.com/reference/android/graphics/ImageFormat#YUV_420_888
+        Image.Plane yPlane = image.getPlanes()[0];
+        Image.Plane uPlane = image.getPlanes()[1];
+        Image.Plane vPlane = image.getPlanes()[2];
 
-        byte[] nv21 = new byte[ySize + uSize + vSize];
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
+        ByteBuffer yBuffer = yPlane.getBuffer();
+        ByteBuffer uBuffer = uPlane.getBuffer();
+        ByteBuffer vBuffer = vPlane.getBuffer();
 
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+        // Full size Y channel and quarter size U*V channels
+        int numPixels = (int) (width * height * 1.5f);
+        byte[] nv21 = new byte[numPixels];
+        int index = 0;
 
-        // ByteArray
+        // Copy Y channel
+        int yRowStride = yPlane.getRowStride();
+        int yPixelStride = yPlane.getPixelStride();
+        for(int y = 0; y < height; ++y) {
+            for (int x = 0; x< width; ++x) {
+                nv21[index++] = yBuffer.get(y * yRowStride + x * yPixelStride);
+            }
+        }
+
+        // Copy VU data; NV21 format is expected to have YYYYVU packaging.
+        // The U/V planes are guaranteed to have the same row stride and pixel stride.
+        int uvRowStride = uPlane.getRowStride();
+        int uvPixelStride = uPlane.getPixelStride();
+        int uvWidth = width / 2;
+        int uvHeight = height / 2;
+
+        for(int y = 0; y < uvHeight; ++y) {
+            for (int x = 0; x < uvWidth; ++x) {
+                int bufferIndex = (y * uvRowStride) + (x * uvPixelStride);
+                // V Channel.
+                nv21[index++] = vBuffer.get(bufferIndex);
+                // U channel.
+                nv21[index++] = uBuffer.get(bufferIndex);
+            }
+        }
+
+        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, width, height,null);
+
+        // YuvImage -> Jpeg
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+        yuvImage.compressToJpeg(new Rect(0, 0, width, height), 40, out);
+        byte[] jpegImage = out.toByteArray();
 
-        // ByteArray to Bitmap
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 40, out);
-        byte[] imageBytes = out.toByteArray();
-        return Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        // Jpeg -> Base64
+        return Base64.encodeToString(jpegImage, Base64.DEFAULT);
     }
 
     @Nullable
     @Override
     public Object callback(@NonNull ImageProxy image, @NonNull Object[] params) {
-        WritableNativeMap map = new WritableNativeMap();
-
+        // get base64
         @SuppressLint("UnsafeOptInUsageError") Image imageImage = image.getImage();
-
         assert imageImage != null;
-        String encoded = toBase(imageImage);
+        String encoded = ImageToBase64(imageImage);
 
+        // get format
         int format = image.getFormat();
 
+        // put into map
+        WritableNativeMap map = new WritableNativeMap();
         map.putString("encoded", encoded);
         map.putInt("format", format);
 

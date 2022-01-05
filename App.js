@@ -41,10 +41,10 @@ const App = () => {
           device={device}
           isActive={true}
           frameProcessor={frameProcessor}
-          frameProcessorFps={0.5}
+          frameProcessorFps={5}
         />
         <FastImage
-          style={styles.camera}
+          style={styles.image}
           source={{ uri: `data:image/jpeg;base64,${image}` }}
         />
         <Text>Image length: {image.length}</Text>
@@ -60,6 +60,11 @@ const styles = StyleSheet.create({
   camera: {
     width: 150,
     height: 200,
+  },
+  image: {
+    width: 200,
+    height: 150,
+    transform: [{ rotate: "90deg" }],
   },
 });
 
