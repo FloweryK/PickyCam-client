@@ -1,12 +1,25 @@
 # VisionCamera-base64
 
-WARNING! Currently this repo is only tested on android.
+### WARNING
+
+1. This repo is only tested on android, for now.
+2. This repo is still on development.
 
 
+
+<br/>
+
+### About this repo
+
+This repo provides a FrameProcessor plugin of [VisionCamera](https://github.com/mrousavy/react-native-vision-camera) which returns base64 string of realtime preview frame.
+
+
+
+<br/>
 
 ### How to install
 
-##### First, install dependencies
+#### First, install dependencies
 
 ```
 $ yarn install
@@ -16,7 +29,7 @@ $ yarn install
 
 <br/>
 
-##### Second, you should manually modify some lines in `react-native-vision-camera` library.
+#### Second, you should manually modify some lines in `react-native-vision-camera` library.
 
 we are going to use `react-native-vision-camera@2.10.0` with some modifications.
 
@@ -65,7 +78,7 @@ jni::global_ref<JImageProxy> frame;
 
 <br/>
 
-##### Finally, run
+#### Finally, run
 
 ```
 $ npx react-native run-android
