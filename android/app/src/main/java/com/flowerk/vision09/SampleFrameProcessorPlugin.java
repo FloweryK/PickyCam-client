@@ -73,7 +73,7 @@ public class SampleFrameProcessorPlugin extends FrameProcessorPlugin {
 
         // YuvImage -> Jpeg
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, height, width), 40, out);
+        yuvImage.compressToJpeg(new Rect(0, 0, height, width), 100, out);
         byte[] jpegImage = out.toByteArray();
 
         return Base64.encodeToString(jpegImage, Base64.DEFAULT);
