@@ -13,8 +13,7 @@ import { io } from "socket.io-client";
 
 const App = () => {
   // DEV USAGE
-  const [host, setHost] = useState("10.0.2.2");
-  const [port, setPort] = useState("8080");
+  const [addr, setAddr] = useState("http://192.168.25.61:8080");
 
   // PRODUCTION USAGE
   const [cameraType, setCameraType] = useState("front");
@@ -39,7 +38,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    socket.current = io(`http://${host}:${port}`);
+    socket.current = io(`http://${addr}`);
 
     socket.current.on("connect", () => {
       console.log("connected");
@@ -63,7 +62,7 @@ const App = () => {
         setUri(`data:image/jpeg;base64,${image}`);
       }
     });
-  }, [host, port]);
+  }, [addr]);
 
   // emit event
   useEffect(async () => {
@@ -85,9 +84,7 @@ const App = () => {
       <Button title="toggle camera" onPress={toggleCameraType} />
       <TextInput
         placeholder="Host address"
-        onChangeText={(text) => {
-          setHost(text);
-        }}
+        onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
       />
       <Camera
         // style={{ width: 300, height: 400 }}
