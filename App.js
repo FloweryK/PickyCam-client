@@ -1,6 +1,6 @@
 import "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   Camera,
   useCameraDevices,
@@ -11,20 +11,22 @@ import { runOnJS } from "react-native-reanimated";
 import FastImage from "react-native-fast-image";
 import { io } from "socket.io-client";
 
-const HOST = "10.0.2.2";
-const PORT = "8080";
-
 const App = () => {
+  // DEV USAGE
+  const [host, setHost] = useState("10.0.2.2");
+  const [port, setPort] = useState("8080");
+
+  // PRODUCTION USAGE
   const [cameraType, setCameraType] = useState("front");
   const [image, setImage] = useState("");
   const [uri, setUri] = useState("");
 
   const [isConnected, setIsConnected] = useState(false);
 
+  const socket = useRef(null);
+
   const devices = useCameraDevices();
   const device = cameraType == "front" ? devices.front : devices.back;
-
-  const socket = useRef(null);
 
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
@@ -37,7 +39,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    socket.current = io(`http://${HOST}:${PORT}`);
+    socket.current = io(`http://${host}:${port}`);
 
     socket.current.on("connect", () => {
       console.log("connected");
@@ -61,7 +63,7 @@ const App = () => {
         setUri(`data:image/jpeg;base64,${image}`);
       }
     });
-  }, []);
+  }, [host, port]);
 
   // emit event
   useEffect(async () => {
@@ -81,6 +83,12 @@ const App = () => {
   return (
     <View>
       <Button title="toggle camera" onPress={toggleCameraType} />
+      <TextInput
+        placeholder="Host address"
+        onChangeText={(text) => {
+          setHost(text);
+        }}
+      />
       <Camera
         // style={{ width: 300, height: 400 }}
         device={device}
