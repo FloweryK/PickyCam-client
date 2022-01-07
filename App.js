@@ -1,6 +1,6 @@
 import "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Button, Image, StyleSheet, Text, View } from "react-native";
 import {
   Camera,
   useCameraDevices,
@@ -12,12 +12,12 @@ import FastImage from "react-native-fast-image";
 import { io } from "socket.io-client";
 
 const App = () => {
-  const devices = useCameraDevices();
-  const device = devices.back;
-
+  const [cameraType, setCameraType] = useState("front");
   const [image, setImage] = useState("");
-  const [format, setFormat] = useState("");
   const [uri, setUri] = useState("");
+
+  const devices = useCameraDevices();
+  const device = cameraType == "front" ? devices.front : devices.back;
 
   const socket = useRef(null);
 
@@ -27,13 +27,14 @@ const App = () => {
     const result = sampleFrame(frame);
 
     runOnJS(setImage)(result.encoded);
-    runOnJS(setFormat)(result.format);
   }, []);
 
+  const toggleCameraType = () => {
+    setCameraType(cameraType == "front" ? "back" : "front");
+  };
+
   useEffect(() => {
-    // socket.io-client
-    // socket.current = io("http://10.0.2.2:8080");
-    socket.current = io("http://192.168.25.61:8080");
+    socket.current = io("http://10.0.2.2:8080");
 
     socket.current.on("connect", () => {
       console.log("connected");
@@ -64,48 +65,25 @@ const App = () => {
     socket.current.emit("request", { frame: image });
   }, [image]);
 
-  // render
   if (device == null) {
-    return (
-      <View>
-        <Text>Loading...</Text>
-      </View>
-    );
-  } else {
-    return (
-      <View style={styles.image}>
-        <Camera
-          // style={styles.camera}
-          device={device}
-          isActive={true}
-          frameProcessor={frameProcessor}
-          frameProcessorFps={1}
-        />
-        <FastImage style={styles.image} source={{ uri }} />
-        {/* <Text>
-          Sent: {image.length} ({format}) {"\n"}
-          {image.slice(0, 30)}...{image.slice(image.length - 30, image.length)}
-        </Text>
-        <Text>
-          Sent: {uri.length} ({format}) {"\n"}
-          {uri.slice(0, 30)}...
-          {uri.slice(uri.length - 30, uri.length)}
-        </Text> */}
-      </View>
-    );
+    return <Text>Loading...</Text>;
   }
+
+  return (
+    <View>
+      <Button title="toggle camera" onPress={toggleCameraType} />
+      <Camera
+        style={{ width: 300, height: 400 }}
+        device={device}
+        isActive={true}
+        frameProcessor={frameProcessor}
+        frameProcessorFps={1}
+      />
+      <FastImage style={{ width: 300, height: 400 }} source={{ uri }} />
+    </View>
+  );
 };
 
-const styles = StyleSheet.create({
-  camera: {
-    width: 150,
-    height: 200,
-  },
-  image: {
-    ...StyleSheet.absoluteFill,
-    // width: 150,
-    // height: 200,
-  },
-});
+const styles = StyleSheet.create({});
 
 export default App;
