@@ -15,7 +15,6 @@ import {
 } from "react-native-vision-camera";
 import { sampleFrame } from "./sampleFrame";
 import { runOnJS } from "react-native-reanimated";
-import FastImage from "react-native-fast-image";
 import { io } from "socket.io-client";
 import { NoFlickerImage } from "react-native-no-flicker-image";
 
@@ -26,9 +25,8 @@ const App = () => {
   // PRODUCTION USAGE
   const [cameraType, setCameraType] = useState("back");
   const [mode, setMode] = useState("prod");
-  const [image, setImage] = useState("");
+  const [frame, setFrame] = useState("");
   const [uri, setUri] = useState("");
-  const [isConnected, setIsConnected] = useState(false);
   const [fps, setFps] = useState(1);
 
   const socket = useRef(null);
@@ -39,7 +37,7 @@ const App = () => {
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
     const result = sampleFrame(data);
-    runOnJS(setImage)(result.encoded);
+    runOnJS(setFrame)(result.encoded);
   }, []);
 
   const toggleCameraType = () => {
@@ -63,12 +61,10 @@ const App = () => {
 
     socket.current.on("connect", () => {
       console.log("connected");
-      setIsConnected(true);
     });
 
     socket.current.on("disconnect", () => {
       console.log("disconnected");
-      setIsConnected(false);
     });
 
     socket.current.on("connect_error", () => {
@@ -79,26 +75,36 @@ const App = () => {
       console.log("received");
 
       const json = JSON.parse(data);
-      const frame = json.frame;
+      const frameProcessed = json.frame;
 
-      if (frame.length > 0) {
-        setUri(`data:image/jpeg;base64,${frame.slice(2, frame.length - 1)}`);
+      if (frameProcessed.length > 0) {
+        setUri(
+          `data:image/jpeg;base64,${frameProcessed.slice(
+            2,
+            frameProcessed.length - 1
+          )}`
+        );
       } else {
-        setUri(`data:image/jpeg;base64,${image}`);
+        setUri(`data:image/jpeg;base64,${frame}`);
       }
     });
   }, [addr]);
 
   // emit event
   useEffect(async () => {
-    if (isConnected) {
+    if (socket.current.connected) {
       console.log("request sent");
-      socket.current.emit("request", { frame: image, mode: mode });
+
+      const dataToSend = {
+        frame,
+        mode,
+      };
+      socket.current.emit("request", dataToSend);
     } else {
       console.log("request not sent");
-      setUri(`data:image/jpeg;base64,${image}`);
+      setUri(`data:image/jpeg;base64,${frame}`);
     }
-  }, [image]);
+  }, [frame]);
 
   if (device == null) {
     return <Text>Loading...</Text>;
@@ -106,15 +112,6 @@ const App = () => {
 
   return (
     <View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.prefix}>Address: </Text>
-        <TextInput
-          placeholder="Host address"
-          autoCapitalize="none"
-          defaultValue={addr}
-          onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
-        />
-      </View>
       <View style={styles.inputContainer}>
         <Text style={styles.prefix}>FPS: </Text>
         <TextInput
@@ -128,7 +125,9 @@ const App = () => {
       <View style={styles.inputContainer}>
         <Text style={styles.prefix}>Status: </Text>
         <Text>
-          {isConnected ? "connected to server" : "not connected to server"}
+          {socket.current.connected
+            ? "connected to server"
+            : "not connected to server"}
         </Text>
       </View>
       <Camera
