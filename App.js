@@ -1,13 +1,6 @@
 import "react-native-reanimated";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Button,
-  Linking,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   Camera,
   useCameraDevices,
