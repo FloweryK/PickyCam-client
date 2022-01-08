@@ -1,6 +1,13 @@
 import "react-native-reanimated";
-import React, { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Button,
+  Linking,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import {
   Camera,
   useCameraDevices,
@@ -10,17 +17,19 @@ import { sampleFrame } from "./sampleFrame";
 import { runOnJS } from "react-native-reanimated";
 import FastImage from "react-native-fast-image";
 import { io } from "socket.io-client";
+import { NoFlickerImage } from "react-native-no-flicker-image";
 
 const App = () => {
   // DEV USAGE
-  const [addr, setAddr] = useState("http://192.168.25.61:8080");
+  const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
 
   // PRODUCTION USAGE
-  const [cameraType, setCameraType] = useState("front");
+  const [cameraType, setCameraType] = useState("back");
+  const [mode, setMode] = useState("prod");
   const [image, setImage] = useState("");
   const [uri, setUri] = useState("");
-
   const [isConnected, setIsConnected] = useState(false);
+  const [fps, setFps] = useState(1);
 
   const socket = useRef(null);
 
@@ -37,8 +46,20 @@ const App = () => {
     setCameraType(cameraType == "front" ? "back" : "front");
   };
 
+  const toggleMode = () => {
+    setMode(mode == "dev" ? "prod" : "dev");
+  };
+
+  useEffect(async () => {
+    if (Camera.getCameraPermissionStatus !== "authorized") {
+      await Camera.requestCameraPermission();
+      setCameraType("front");
+      setCameraType("back");
+    }
+  }, []);
+
   useEffect(() => {
-    socket.current = io(`http://${addr}`);
+    socket.current = io(addr);
 
     socket.current.on("connect", () => {
       console.log("connected");
@@ -48,6 +69,10 @@ const App = () => {
     socket.current.on("disconnect", () => {
       console.log("disconnected");
       setIsConnected(false);
+    });
+
+    socket.current.on("connect_error", () => {
+      console.log("error");
     });
 
     socket.current.on("response", (data) => {
@@ -68,7 +93,7 @@ const App = () => {
   useEffect(async () => {
     if (isConnected) {
       console.log("request sent");
-      socket.current.emit("request", { frame: image });
+      socket.current.emit("request", { frame: image, mode: mode });
     } else {
       console.log("request not sent");
       setUri(`data:image/jpeg;base64,${image}`);
@@ -81,21 +106,72 @@ const App = () => {
 
   return (
     <View>
-      <Button title="toggle camera" onPress={toggleCameraType} />
-      <TextInput
-        placeholder="Host address"
-        onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.prefix}>Address: </Text>
+        <TextInput
+          placeholder="Host address"
+          autoCapitalize="none"
+          defaultValue={addr}
+          onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.prefix}>FPS: </Text>
+        <TextInput
+          placeholder="Frame Processor fps"
+          defaultValue={fps.toString()}
+          onSubmitEditing={(event) =>
+            setFps(parseFloat(event.nativeEvent.text))
+          }
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Text style={styles.prefix}>Status: </Text>
+        <Text>
+          {isConnected ? "connected to server" : "not connected to server"}
+        </Text>
+      </View>
       <Camera
-        // style={{ width: 300, height: 400 }}
         device={device}
         isActive={true}
         frameProcessor={frameProcessor}
-        frameProcessorFps={1}
+        frameProcessorFps={fps}
       />
-      <FastImage style={{ width: 300, height: 400 }} source={{ uri }} />
+      <NoFlickerImage
+        style={{
+          width: 300,
+          height: 500,
+          alignSelf: "center",
+          margin: 50,
+          transform: [{ rotate: cameraType == "front" ? "180deg" : "0deg" }],
+        }}
+        source={{ uri }}
+      />
+      <Button title="toggle camera" onPress={toggleCameraType} />
+      <Button
+        title={`switch to ${mode == "dev" ? "prod" : "dev"} mode`}
+        onPress={toggleMode}
+      />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  inputContainer: {
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    marginHorizontal: 10,
+    marginVertical: 1,
+    borderRadius: 10,
+    height: 35,
+  },
+  prefix: {
+    paddingHorizontal: 10,
+    fontWeight: "bold",
+    color: "black",
+  },
+});
 
 export default App;
