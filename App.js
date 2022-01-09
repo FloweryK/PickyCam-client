@@ -41,6 +41,10 @@ const App = () => {
     setMode(mode == "dev" ? "prod" : "dev");
   };
 
+  const toUri = (image) => {
+    return `data:image/jpeg;base64,${image}`;
+  };
+
   useEffect(async () => {
     if (Camera.getCameraPermissionStatus !== "authorized") {
       await Camera.requestCameraPermission();
@@ -71,14 +75,9 @@ const App = () => {
       const frameProcessed = json.frame;
 
       if (frameProcessed.length > 0) {
-        setUri(
-          `data:image/jpeg;base64,${frameProcessed.slice(
-            2,
-            frameProcessed.length - 1
-          )}`
-        );
+        setUri(toUri(frameProcessed.slice(2, frameProcessed.length - 1)));
       } else {
-        setUri(`data:image/jpeg;base64,${frame}`);
+        setUri(toUri(frame));
       }
     });
   }, [addr]);
@@ -91,11 +90,12 @@ const App = () => {
       const dataToSend = {
         frame,
         mode,
+        cameraType,
       };
       socket.current.emit("request", dataToSend);
     } else {
       console.log("request not sent");
-      setUri(`data:image/jpeg;base64,${frame}`);
+      setUri(toUri(frame));
     }
   }, [frame]);
 
@@ -123,6 +123,11 @@ const App = () => {
             : "not connected to server"}
         </Text>
       </View>
+      <Button title="toggle camera" onPress={toggleCameraType} />
+      <Button
+        title={`switch to ${mode == "dev" ? "prod" : "dev"} mode`}
+        onPress={toggleMode}
+      />
       <Camera
         device={device}
         isActive={true}
@@ -135,14 +140,8 @@ const App = () => {
           height: 500,
           alignSelf: "center",
           margin: 50,
-          transform: [{ rotate: cameraType == "front" ? "180deg" : "0deg" }],
         }}
         source={{ uri }}
-      />
-      <Button title="toggle camera" onPress={toggleCameraType} />
-      <Button
-        title={`switch to ${mode == "dev" ? "prod" : "dev"} mode`}
-        onPress={toggleMode}
       />
     </View>
   );
@@ -163,6 +162,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontWeight: "bold",
     color: "black",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
 
