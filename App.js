@@ -1,6 +1,13 @@
 import "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Switch, Text, TextInput, View } from "react-native";
+import {
+  Button,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import {
   Camera,
   useCameraDevices,
@@ -12,6 +19,7 @@ import { io } from "socket.io-client";
 import { NoFlickerImage } from "react-native-no-flicker-image";
 import TextBox from "./components/TextBox";
 import toUri from "./utils/toUri";
+import SettingModal from "./components/SettingModal";
 
 const styles = StyleSheet.create({
   image: {
@@ -27,13 +35,19 @@ const styles = StyleSheet.create({
 });
 
 const App = () => {
-  const [isConnect, setConnect] = useState(false);
-  const [isFront, setFront] = useState(false);
-  const [isDebug, setDebug] = useState(false);
-
+  // Setting modals
+  const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [options, setOptions] = useState({
+    isDebug: false,
+    width_seg: 480,
+    width_inp: 100,
+  });
   const [fps, setFps] = useState(1);
 
-  const [addr, setAddr] = useState("http://10.0.2.2:8080");
+  // states
+  const [isConnect, setConnect] = useState(false);
+  const [isFront, setFront] = useState(false);
   const [frame, setFrame] = useState("");
   const [uri, setUri] = useState("");
 
@@ -50,10 +64,6 @@ const App = () => {
 
   const toggleFront = () => {
     setFront(!isFront);
-  };
-
-  const toggleDebug = () => {
-    setDebug(!isDebug);
   };
 
   const toggleConenct = () => {
@@ -116,10 +126,7 @@ const App = () => {
 
       const dataToSend = {
         frame,
-        options: {
-          isDebug,
-          isFront,
-        },
+        options,
       };
 
       await socket.current.emit("request", dataToSend);
@@ -145,8 +152,18 @@ const App = () => {
       <View style={styles.buttonContainer}>
         <Switch onValueChange={toggleConenct} value={isConnect} />
         <Switch onValueChange={toggleFront} value={isFront} />
-        <Switch onValueChange={toggleDebug} value={isDebug} />
+        <Button title="settings" onPress={() => setModalVisible(true)} />
       </View>
+      <SettingModal
+        isModalVisible={isModalVisible}
+        setModalVisible={setModalVisible}
+        addr={addr}
+        setAddr={setAddr}
+        fps={fps}
+        setFps={setFps}
+        options={options}
+        setOptions={setOptions}
+      />
       <Camera
         device={device}
         isActive={true}

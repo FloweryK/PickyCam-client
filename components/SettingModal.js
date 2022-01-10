@@ -1,65 +1,74 @@
-import React from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, StyleSheet, Switch, TextInput, View } from "react-native";
 import Modal from "react-native-modal";
+import TextBox from "./TextBox";
 
 const SettingModal = ({
-  isVisible,
-  setVisible,
+  isModalVisible,
+  setModalVisible,
   addr,
   setAddr,
-  mode,
-  setMode,
   fps,
   setFps,
+  options,
+  setOptions,
 }) => {
+  const toggleDebug = () => {
+    setOptions({ ...options, isDebug: !options.isDebug });
+  };
+
   return (
-    <Modal isVisible={isVisible}>
+    <Modal isVisible={isModalVisible}>
       <View style={styles.content}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.prefix}>Address: </Text>
+        <TextBox prefix="address">
           <TextInput
-            placeholder="Host Address"
+            placeholder="Host address"
             defaultValue={addr}
             onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
           />
-        </View>
-        <View style={styles.inputContainer}>
-          <Text style={styles.prefix}>FPS: </Text>
+        </TextBox>
+        <TextBox prefix="FPS">
           <TextInput
-            placeholder="Frame Processor fps"
+            placeholder="Frame Processor FPS"
             defaultValue={fps.toString()}
             onSubmitEditing={(event) =>
               setFps(parseFloat(event.nativeEvent.text))
             }
           />
-        </View>
-        <Button
-          title={`switch to ${mode == "dev" ? "prod" : "dev"} mode`}
-          onPress={() => setMode(mode == "dev" ? "prod" : "dev")}
-        />
-        <Button title="close modal" onPress={() => setVisible(false)} />
+        </TextBox>
+        <TextBox prefix="width_seg">
+          <TextInput
+            placeholder="segmentation width"
+            defaultValue={options.width_seg.toString()}
+            onSubmitEditing={(event) =>
+              setOptions({
+                ...options,
+                width_seg: parseFloat(event.nativeEvent.text),
+              })
+            }
+          />
+        </TextBox>
+        <TextBox prefix="width_inp">
+          <TextInput
+            placeholder="inpainting width"
+            defaultValue={options.width_inp.toString()}
+            onSubmitEditing={(event) =>
+              setOptions({
+                ...options,
+                width_inp: parseFloat(event.nativeEvent.text),
+              })
+            }
+          />
+        </TextBox>
+        <TextBox prefix="Debug mode">
+          <Switch onValueChange={toggleDebug} value={options.isDebug} />
+        </TextBox>
+        <Button title="close" onPress={() => setModalVisible(false)} />
       </View>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  inputContainer: {
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    marginHorizontal: 10,
-    marginVertical: 1,
-    borderRadius: 10,
-    height: 35,
-    minWidth: 300,
-  },
-  prefix: {
-    paddingHorizontal: 10,
-    fontWeight: "bold",
-    color: "black",
-  },
   content: {
     backgroundColor: "white",
     padding: 22,
@@ -67,10 +76,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 4,
     borderColor: "rgba(0, 0, 0, 0.1)",
-  },
-  contentTitle: {
-    fontSize: 20,
-    marginBottom: 12,
   },
 });
 
