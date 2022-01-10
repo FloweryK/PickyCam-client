@@ -1,6 +1,6 @@
 import "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Switch, Text, TextInput, View } from "react-native";
 import {
   Camera,
   useCameraDevices,
@@ -10,22 +10,37 @@ import { sampleFrame } from "./sampleFrame";
 import { runOnJS } from "react-native-reanimated";
 import { io } from "socket.io-client";
 import { NoFlickerImage } from "react-native-no-flicker-image";
+import TextBox from "./components/TextBox";
+import toUri from "./utils/toUri";
+
+const styles = StyleSheet.create({
+  image: {
+    width: 300,
+    height: 500,
+    alignSelf: "center",
+    margin: 50,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+});
 
 const App = () => {
-  // DEV USAGE
-  const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
+  const [isConnect, setConnect] = useState(false);
+  const [isFront, setFront] = useState(false);
+  const [isDebug, setDebug] = useState(false);
 
-  // PRODUCTION USAGE
-  const [cameraType, setCameraType] = useState("back");
-  const [mode, setMode] = useState("prod");
+  const [fps, setFps] = useState(1);
+
+  const [addr, setAddr] = useState("http://10.0.2.2:8080");
   const [frame, setFrame] = useState("");
   const [uri, setUri] = useState("");
-  const [fps, setFps] = useState(1);
 
   const socket = useRef(null);
 
   const devices = useCameraDevices();
-  const device = cameraType == "front" ? devices.front : devices.back;
+  const device = isFront ? devices.front : devices.back;
 
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
@@ -33,27 +48,25 @@ const App = () => {
     runOnJS(setFrame)(result.encoded);
   }, []);
 
-  const toggleCameraType = () => {
-    setCameraType(cameraType == "front" ? "back" : "front");
+  const toggleFront = () => {
+    setFront(!isFront);
   };
 
-  const toggleMode = () => {
-    setMode(mode == "dev" ? "prod" : "dev");
+  const toggleDebug = () => {
+    setDebug(!isDebug);
   };
 
-  const toUri = (image) => {
-    return `data:image/jpeg;base64,${image}`;
-  };
-
-  useEffect(async () => {
-    if (Camera.getCameraPermissionStatus !== "authorized") {
-      await Camera.requestCameraPermission();
-      setCameraType("front");
-      setCameraType("back");
+  const toggleConenct = () => {
+    if (isConnect) {
+      disconnectSocket();
+      setConnect(false);
+    } else {
+      connectSocket();
+      setConnect(true);
     }
-  }, []);
+  };
 
-  useEffect(() => {
+  const connectSocket = () => {
     socket.current = io(addr);
 
     socket.current.on("connect", () => {
@@ -66,6 +79,7 @@ const App = () => {
 
     socket.current.on("connect_error", () => {
       console.log("error");
+      setConnect(false);
     });
 
     socket.current.on("response", (data) => {
@@ -80,19 +94,31 @@ const App = () => {
         setUri(toUri(frame));
       }
     });
-  }, [addr]);
+  };
 
-  // emit event
+  // request permission on mount
   useEffect(async () => {
-    if (socket.current.connected) {
+    if (Camera.getCameraPermissionStatus !== "authorized") {
+      await Camera.requestCameraPermission();
+      setFront(true);
+      setFront(false);
+    }
+  }, []);
+
+  // emit event every frame
+  useEffect(async () => {
+    if (isConnect) {
       console.log("request sent");
 
       const dataToSend = {
         frame,
-        mode,
-        cameraType,
+        options: {
+          isDebug,
+          isFront,
+        },
       };
-      socket.current.emit("request", dataToSend);
+
+      await socket.current.emit("request", dataToSend);
     } else {
       console.log("request not sent");
       setUri(toUri(frame));
@@ -105,68 +131,27 @@ const App = () => {
 
   return (
     <View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.prefix}>FPS: </Text>
-        <TextInput
-          placeholder="Frame Processor fps"
-          defaultValue={fps.toString()}
-          onSubmitEditing={(event) =>
-            setFps(parseFloat(event.nativeEvent.text))
-          }
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.prefix}>Status: </Text>
+      <TextBox prefix="Status: ">
         <Text>
-          {socket.current.connected
+          {socket.current?.connected
             ? "connected to server"
             : "not connected to server"}
         </Text>
+      </TextBox>
+      <View style={styles.buttonContainer}>
+        <Switch onValueChange={toggleConenct} value={isConnect} />
+        <Switch onValueChange={toggleFront} value={isFront} />
+        <Switch onValueChange={toggleDebug} value={isDebug} />
       </View>
-      <Button title="toggle camera" onPress={toggleCameraType} />
-      <Button
-        title={`switch to ${mode == "dev" ? "prod" : "dev"} mode`}
-        onPress={toggleMode}
-      />
       <Camera
         device={device}
         isActive={true}
         frameProcessor={frameProcessor}
         frameProcessorFps={fps}
       />
-      <NoFlickerImage
-        style={{
-          width: 300,
-          height: 500,
-          alignSelf: "center",
-          margin: 50,
-        }}
-        source={{ uri }}
-      />
+      <NoFlickerImage style={styles.image} source={{ uri }} />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  inputContainer: {
-    borderWidth: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    marginHorizontal: 10,
-    marginVertical: 1,
-    borderRadius: 10,
-    height: 35,
-  },
-  prefix: {
-    paddingHorizontal: 10,
-    fontWeight: "bold",
-    color: "black",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-});
 
 export default App;
