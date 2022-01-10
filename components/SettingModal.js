@@ -59,6 +59,18 @@ const SettingModal = ({
             }
           />
         </TextBox>
+        <TextBox prefix="pad_ratio">
+          <TextInput
+            placeholder="padding ratio"
+            defaultValue={options.pad_ratio.toString()}
+            onSubmitEditing={(event) =>
+              setOptions({
+                ...options,
+                pad_ratio: parseFloat(event.nativeEvent.text),
+              })
+            }
+          />
+        </TextBox>
         <TextBox prefix="Debug mode">
           <Switch onValueChange={toggleDebug} value={options.isDebug} />
         </TextBox>

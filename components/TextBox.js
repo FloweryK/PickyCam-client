@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     marginVertical: 1,
     borderRadius: 10,
     height: 35,
-    minWidth: 300,
+    minWidth: 350,
   },
   prefix: {
     paddingHorizontal: 10,

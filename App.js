@@ -42,6 +42,7 @@ const App = () => {
     isDebug: false,
     width_seg: 480,
     width_inp: 100,
+    pad_ratio: 0.04,
   });
   const [fps, setFps] = useState(1);
 
