@@ -96,6 +96,10 @@ const App = () => {
     });
   };
 
+  const disconnectSocket = () => {
+    socket.current.disconnect();
+  };
+
   // request permission on mount
   useEffect(async () => {
     if (Camera.getCameraPermissionStatus !== "authorized") {
