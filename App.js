@@ -125,7 +125,7 @@ const App = () => {
 
   // emit event every frame
   useEffect(async () => {
-    if (isConnect) {
+    if (socket.current?.connected) {
       console.log("request sent");
 
       const dataToSend = {
