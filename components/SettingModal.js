@@ -16,6 +16,10 @@ const SettingModal = ({
     setOptions({ ...options, isDebug: !options.isDebug });
   };
 
+  const toggleFaceDetect = () => {
+    setOptions({ ...options, faceDetect: !options.faceDetect });
+  };
+
   return (
     <Modal isVisible={isModalVisible}>
       <View style={styles.content}>
@@ -102,6 +106,10 @@ const SettingModal = ({
         </TextBox>
         <TextBox prefix="Debug mode">
           <Switch onValueChange={toggleDebug} value={options.isDebug} />
+        </TextBox>
+
+        <TextBox prefix="Face Detect">
+          <Switch onValueChange={toggleFaceDetect} value={options.faceDetect} />
         </TextBox>
         <Button title="close" onPress={() => setModalVisible(false)} />
       </View>

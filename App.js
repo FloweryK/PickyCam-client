@@ -36,11 +36,11 @@ const styles = StyleSheet.create({
 
 const App = () => {
   // Setting modals
-  // const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
-  const [addr, setAddr] = useState("http://10.0.2.2:8080");
+  const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
   const [isModalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState({
     isDebug: false,
+    faceDetect: true,
     width_seg: 480,
     width_fcr: 480,
     width_inp: 100,
