@@ -12,8 +12,8 @@ import { io } from "socket.io-client";
 import TextBox from "./components/TextBox";
 import toUri from "./utils/toUri";
 import SettingModal from "./components/SettingModal";
-import FastImage from "react-native-fast-image";
 import { NoFlickerImage } from "react-native-no-flicker-image";
+import SwitchBox from "./components/SwitchBox";
 
 const styles = StyleSheet.create({
   image: {
@@ -166,8 +166,12 @@ const App = () => {
         </Text>
       </TextBox>
       <View style={styles.buttonContainer}>
-        <Switch onValueChange={toggleConenct} value={isConnect} />
-        <Switch onValueChange={toggleFront} value={settings.isFront} />
+        <SwitchBox prefix="connect">
+          <Switch onValueChange={toggleConenct} value={isConnect} />
+        </SwitchBox>
+        <SwitchBox prefix="toggle">
+          <Switch onValueChange={toggleFront} value={settings.isFront} />
+        </SwitchBox>
         <Button title="settings" onPress={() => setModalVisible(true)} />
       </View>
       <SettingModal

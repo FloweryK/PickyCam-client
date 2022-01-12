@@ -2,6 +2,17 @@ import { Button, StyleSheet, Switch, TextInput, View } from "react-native";
 import Modal from "react-native-modal";
 import TextBox from "./TextBox";
 
+const styles = StyleSheet.create({
+  content: {
+    backgroundColor: "white",
+    padding: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 4,
+    borderColor: "rgba(0, 0, 0, 0.1)",
+  },
+});
+
 const SettingModal = ({
   isModalVisible,
   setModalVisible,
@@ -19,7 +30,7 @@ const SettingModal = ({
   return (
     <Modal isVisible={isModalVisible}>
       <View style={styles.content}>
-        <TextBox prefix="address">
+        <TextBox prefix="Host">
           <TextInput
             placeholder="Host address"
             defaultValue={settings.addr}
@@ -120,16 +131,5 @@ const SettingModal = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  content: {
-    backgroundColor: "white",
-    padding: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 4,
-    borderColor: "rgba(0, 0, 0, 0.1)",
-  },
-});
 
 export default SettingModal;
