@@ -22,6 +22,13 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     margin: 50,
   },
+  imageRotate: {
+    width: 400,
+    height: 600,
+    alignSelf: "center",
+    margin: 50,
+    transform: [{ rotate: "180deg" }],
+  },
   buttonContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -177,7 +184,16 @@ const App = () => {
       />
       <Text>Last Sent: {lastSent}</Text>
       <Text>Last Received: {lastReceived}</Text>
-      <NoFlickerImage style={styles.image} source={{ uri }} />
+      <NoFlickerImage
+        style={
+          settings.isFront
+            ? socket.current?.connected
+              ? styles.image
+              : styles.imageRotate
+            : styles.image
+        }
+        source={{ uri }}
+      />
     </View>
   );
 };
