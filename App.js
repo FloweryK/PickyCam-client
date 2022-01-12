@@ -1,22 +1,14 @@
 import "react-native-reanimated";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Button,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Button, StyleSheet, Switch, Text, View } from "react-native";
 import {
   Camera,
   useCameraDevices,
   useFrameProcessor,
 } from "react-native-vision-camera";
-import { sampleFrame } from "./sampleFrame";
+import { sampleFrame } from "./plugin/sampleFrame";
 import { runOnJS } from "react-native-reanimated";
 import { io } from "socket.io-client";
-import { NoFlickerImage } from "react-native-no-flicker-image";
 import TextBox from "./components/TextBox";
 import toUri from "./utils/toUri";
 import SettingModal from "./components/SettingModal";
@@ -36,12 +28,12 @@ const styles = StyleSheet.create({
 });
 
 const App = () => {
-  // Setting modals
+  // settings
   const [addr, setAddr] = useState(
     "http://focusonyou.floweryk.com.jp.ngrok.io"
   );
   const [fps, setFps] = useState(2);
-  const [isShowBase64, setShowBase64] = useState(false);
+  const [isFront, setFront] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState({
     isDebug: false,
@@ -55,17 +47,19 @@ const App = () => {
 
   // states
   const [isConnect, setConnect] = useState(false);
-  const [isFront, setFront] = useState(false);
   const [frame, setFrame] = useState("");
   const [uri, setUri] = useState("");
   const [lastSent, setLastSent] = useState("");
   const [lastReceived, setLastReceived] = useState("");
 
+  // socket for communication
   const socket = useRef(null);
 
+  // device definition
   const devices = useCameraDevices();
   const device = isFront ? devices.front : devices.back;
 
+  // frame processor logic
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
     const result = sampleFrame(data);
@@ -104,11 +98,10 @@ const App = () => {
 
     socket.current.on("response", (data) => {
       console.log("received");
-
-      const json = JSON.parse(data);
-
       const date = new Date();
       setLastReceived(date.toString());
+
+      const json = JSON.parse(data);
 
       const frameProcessed = json.frame;
       setUri(toUri(frameProcessed.slice(2, frameProcessed.length - 1)));
@@ -132,14 +125,13 @@ const App = () => {
   useEffect(() => {
     if (socket.current?.connected) {
       console.log("request sent");
+      const date = new Date();
+      setLastSent(date.toString());
 
       const dataToSend = {
         frame,
         options,
       };
-
-      const date = new Date();
-      setLastSent(date.toString());
 
       socket.current.emit("request", dataToSend);
     } else {
