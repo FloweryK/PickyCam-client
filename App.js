@@ -13,11 +13,12 @@ import TextBox from "./components/TextBox";
 import toUri from "./utils/toUri";
 import SettingModal from "./components/SettingModal";
 import FastImage from "react-native-fast-image";
+import { NoFlickerImage } from "react-native-no-flicker-image";
 
 const styles = StyleSheet.create({
   image: {
-    width: 300,
-    height: 500,
+    width: 400,
+    height: 600,
     alignSelf: "center",
     margin: 50,
   },
@@ -35,7 +36,7 @@ const App = () => {
   const [fps, setFps] = useState(2);
   const [isFront, setFront] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [options, setOptions] = useState({
+  const [settings, setSettings] = useState({
     isDebug: false,
     faceDetect: false,
     width_seg: 480,
@@ -62,7 +63,7 @@ const App = () => {
   // frame processor logic
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
-    const result = sampleFrame(data);
+    const result = sampleFrame(data, isFront);
     runOnJS(setFrame)(result.encoded);
   }, []);
 
@@ -116,8 +117,8 @@ const App = () => {
   useEffect(async () => {
     if (Camera.getCameraPermissionStatus !== "authorized") {
       await Camera.requestCameraPermission();
-      setFront(true);
-      setFront(false);
+      toggleFront();
+      toggleFront();
     }
   }, []);
 
@@ -130,7 +131,7 @@ const App = () => {
 
       const dataToSend = {
         frame,
-        options,
+        settings,
       };
 
       socket.current.emit("request", dataToSend);
@@ -165,8 +166,8 @@ const App = () => {
         setAddr={setAddr}
         fps={fps}
         setFps={setFps}
-        options={options}
-        setOptions={setOptions}
+        settings={settings}
+        setSettings={setSettings}
       />
       <Camera
         device={device}
@@ -176,7 +177,7 @@ const App = () => {
       />
       <Text>Last Sent: {lastSent}</Text>
       <Text>Last Received: {lastReceived}</Text>
-      <FastImage style={styles.image} source={{ uri }} />
+      <NoFlickerImage style={styles.image} source={{ uri }} />
     </View>
   );
 };

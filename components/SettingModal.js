@@ -9,15 +9,15 @@ const SettingModal = ({
   setAddr,
   fps,
   setFps,
-  options,
-  setOptions,
+  settings,
+  setSettings,
 }) => {
   const toggleDebug = () => {
-    setOptions({ ...options, isDebug: !options.isDebug });
+    setSettings({ ...settings, isDebug: !settings.isDebug });
   };
 
   const toggleFaceDetect = () => {
-    setOptions({ ...options, faceDetect: !options.faceDetect });
+    setSettings({ ...settings, faceDetect: !settings.faceDetect });
   };
 
   return (
@@ -42,11 +42,11 @@ const SettingModal = ({
         <TextBox prefix="width_seg">
           <TextInput
             placeholder="segmentation width"
-            defaultValue={options.width_seg.toString()}
+            defaultValue={settings.width_seg.toString()}
             onChangeText={(text) => {
               if (text)
-                setOptions({
-                  ...options,
+                setSettings({
+                  ...settings,
                   width_seg: parseInt(text),
                 });
             }}
@@ -55,11 +55,11 @@ const SettingModal = ({
         <TextBox prefix="width_fcr">
           <TextInput
             placeholder="segmentation width"
-            defaultValue={options.width_fcr.toString()}
+            defaultValue={settings.width_fcr.toString()}
             onChangeText={(text) => {
               if (text)
-                setOptions({
-                  ...options,
+                setSettings({
+                  ...settings,
                   width_fcr: parseInt(text),
                 });
             }}
@@ -68,11 +68,11 @@ const SettingModal = ({
         <TextBox prefix="width_inp">
           <TextInput
             placeholder="inpainting width"
-            defaultValue={options.width_inp.toString()}
+            defaultValue={settings.width_inp.toString()}
             onChangeText={(text) => {
               if (text)
-                setOptions({
-                  ...options,
+                setSettings({
+                  ...settings,
                   width_inp: parseInt(text),
                 });
             }}
@@ -81,11 +81,11 @@ const SettingModal = ({
         <TextBox prefix="pad_ratio_known">
           <TextInput
             placeholder="padding ratio known"
-            defaultValue={options.pad_ratio_known.toString()}
+            defaultValue={settings.pad_ratio_known.toString()}
             onChangeText={(text) => {
               if (text)
-                setOptions({
-                  ...options,
+                setSettings({
+                  ...settings,
                   pad_ratio_known: parseFloat(text),
                 });
             }}
@@ -94,22 +94,25 @@ const SettingModal = ({
         <TextBox prefix="pad_ratio_unknown">
           <TextInput
             placeholder="padding ratio unknown"
-            defaultValue={options.pad_ratio_unknown.toString()}
+            defaultValue={settings.pad_ratio_unknown.toString()}
             onChangeText={(text) => {
               if (text)
-                setOptions({
-                  ...options,
+                setSettings({
+                  ...settings,
                   pad_ratio_unknown: parseFloat(text),
                 });
             }}
           />
         </TextBox>
         <TextBox prefix="Debug mode">
-          <Switch onValueChange={toggleDebug} value={options.isDebug} />
+          <Switch onValueChange={toggleDebug} value={settings.isDebug} />
         </TextBox>
 
         <TextBox prefix="Face Detect">
-          <Switch onValueChange={toggleFaceDetect} value={options.faceDetect} />
+          <Switch
+            onValueChange={toggleFaceDetect}
+            value={settings.faceDetect}
+          />
         </TextBox>
         <Button title="close" onPress={() => setModalVisible(false)} />
       </View>
