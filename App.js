@@ -20,6 +20,7 @@ import { NoFlickerImage } from "react-native-no-flicker-image";
 import TextBox from "./components/TextBox";
 import toUri from "./utils/toUri";
 import SettingModal from "./components/SettingModal";
+import FastImage from "react-native-fast-image";
 
 const styles = StyleSheet.create({
   image: {
@@ -36,24 +37,29 @@ const styles = StyleSheet.create({
 
 const App = () => {
   // Setting modals
-  const [addr, setAddr] = useState("http://focusonyou.floweryk.com.ngrok.io");
+  const [addr, setAddr] = useState(
+    "http://focusonyou.floweryk.com.jp.ngrok.io"
+  );
+  const [fps, setFps] = useState(2);
+  const [isShowBase64, setShowBase64] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [options, setOptions] = useState({
     isDebug: false,
-    faceDetect: true,
+    faceDetect: false,
     width_seg: 480,
     width_fcr: 480,
-    width_inp: 100,
+    width_inp: 200,
     pad_ratio_known: 0.01,
     pad_ratio_unknown: 0.04,
   });
-  const [fps, setFps] = useState(1);
 
   // states
   const [isConnect, setConnect] = useState(false);
   const [isFront, setFront] = useState(false);
   const [frame, setFrame] = useState("");
   const [uri, setUri] = useState("");
+  const [lastSent, setLastSent] = useState("");
+  const [lastReceived, setLastReceived] = useState("");
 
   const socket = useRef(null);
 
@@ -100,13 +106,12 @@ const App = () => {
       console.log("received");
 
       const json = JSON.parse(data);
-      const frameProcessed = json.frame;
 
-      if (frameProcessed.length > 0) {
-        setUri(toUri(frameProcessed.slice(2, frameProcessed.length - 1)));
-      } else {
-        setUri(toUri(frame));
-      }
+      const date = new Date();
+      setLastReceived(date.toString());
+
+      const frameProcessed = json.frame;
+      setUri(toUri(frameProcessed.slice(2, frameProcessed.length - 1)));
     });
   };
 
@@ -124,7 +129,7 @@ const App = () => {
   }, []);
 
   // emit event every frame
-  useEffect(async () => {
+  useEffect(() => {
     if (socket.current?.connected) {
       console.log("request sent");
 
@@ -133,7 +138,10 @@ const App = () => {
         options,
       };
 
-      await socket.current.emit("request", dataToSend);
+      const date = new Date();
+      setLastSent(date.toString());
+
+      socket.current.emit("request", dataToSend);
     } else {
       console.log("request not sent");
       setUri(toUri(frame));
@@ -174,7 +182,9 @@ const App = () => {
         frameProcessor={frameProcessor}
         frameProcessorFps={fps}
       />
-      <NoFlickerImage style={styles.image} source={{ uri }} />
+      <Text>Last Sent: {lastSent}</Text>
+      <Text>Last Received: {lastReceived}</Text>
+      <FastImage style={styles.image} source={{ uri }} />
     </View>
   );
 };
