@@ -5,10 +5,6 @@ import TextBox from "./TextBox";
 const SettingModal = ({
   isModalVisible,
   setModalVisible,
-  addr,
-  setAddr,
-  fps,
-  setFps,
   settings,
   setSettings,
 }) => {
@@ -26,16 +22,21 @@ const SettingModal = ({
         <TextBox prefix="address">
           <TextInput
             placeholder="Host address"
-            defaultValue={addr}
-            onSubmitEditing={(event) => setAddr(event.nativeEvent.text)}
+            defaultValue={settings.addr}
+            onSubmitEditing={(event) =>
+              setSettings({ ...settings, addr: event.nativeEvent.text })
+            }
           />
         </TextBox>
         <TextBox prefix="FPS">
           <TextInput
             placeholder="Frame Processor FPS"
-            defaultValue={fps.toString()}
+            defaultValue={settings.fps.toString()}
             onChangeText={(text) => {
-              if (text) setFps(parseFloat(text));
+              setSettings({
+                ...settings,
+                fps: parseFloat(text),
+              });
             }}
           />
         </TextBox>

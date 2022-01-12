@@ -30,15 +30,13 @@ const styles = StyleSheet.create({
 
 const App = () => {
   // settings
-  const [addr, setAddr] = useState(
-    "http://focusonyou.floweryk.com.jp.ngrok.io"
-  );
-  const [fps, setFps] = useState(2);
-  const [isFront, setFront] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
   const [settings, setSettings] = useState({
+    addr: "http://focusonyou.floweryk.com.jp.ngrok.io",
+    isFront: false,
     isDebug: false,
     faceDetect: false,
+    fps: 2,
     width_seg: 480,
     width_fcr: 480,
     width_inp: 200,
@@ -58,17 +56,17 @@ const App = () => {
 
   // device definition
   const devices = useCameraDevices();
-  const device = isFront ? devices.front : devices.back;
+  const device = settings.isFront ? devices.front : devices.back;
 
   // frame processor logic
   const frameProcessor = useFrameProcessor((data) => {
     "worklet";
-    const result = sampleFrame(data, isFront);
+    const result = sampleFrame(data);
     runOnJS(setFrame)(result.encoded);
   }, []);
 
   const toggleFront = () => {
-    setFront(!isFront);
+    setSettings({ ...settings, isFront: !settings.isFront });
   };
 
   const toggleConenct = () => {
@@ -82,7 +80,7 @@ const App = () => {
   };
 
   const connectSocket = () => {
-    socket.current = io(addr);
+    socket.current = io(settings.addr);
 
     socket.current.on("connect", () => {
       console.log("connected");
@@ -117,8 +115,14 @@ const App = () => {
   useEffect(async () => {
     if (Camera.getCameraPermissionStatus !== "authorized") {
       await Camera.requestCameraPermission();
-      toggleFront();
-      toggleFront();
+      setSettings({
+        ...settings,
+        isFront: true,
+      });
+      setSettings({
+        ...settings,
+        isFront: false,
+      });
     }
   }, []);
 
@@ -156,16 +160,12 @@ const App = () => {
       </TextBox>
       <View style={styles.buttonContainer}>
         <Switch onValueChange={toggleConenct} value={isConnect} />
-        <Switch onValueChange={toggleFront} value={isFront} />
+        <Switch onValueChange={toggleFront} value={settings.isFront} />
         <Button title="settings" onPress={() => setModalVisible(true)} />
       </View>
       <SettingModal
         isModalVisible={isModalVisible}
         setModalVisible={setModalVisible}
-        addr={addr}
-        setAddr={setAddr}
-        fps={fps}
-        setFps={setFps}
         settings={settings}
         setSettings={setSettings}
       />
@@ -173,7 +173,7 @@ const App = () => {
         device={device}
         isActive={true}
         frameProcessor={frameProcessor}
-        frameProcessorFps={fps}
+        frameProcessorFps={settings.fps}
       />
       <Text>Last Sent: {lastSent}</Text>
       <Text>Last Received: {lastReceived}</Text>
