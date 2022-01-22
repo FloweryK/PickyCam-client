@@ -44,10 +44,11 @@ const SettingModal = ({
             placeholder="Frame Processor FPS"
             defaultValue={settings.fps.toString()}
             onChangeText={(text) => {
-              setSettings({
-                ...settings,
-                fps: parseFloat(text),
-              });
+              if (text)
+                setSettings({
+                  ...settings,
+                  fps: parseFloat(text),
+                });
             }}
           />
         </TextBox>
