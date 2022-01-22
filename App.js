@@ -48,7 +48,7 @@ const App = () => {
     width_fcr: 480,
     width_inp: 200,
     pad_ratio_known: 0.01,
-    pad_ratio_unknown: 0.04,
+    pad_ratio_unknown: 0.01,
   });
 
   // states
